@@ -17,7 +17,7 @@ app = typer.Typer(
     help="Weather + News agent powered by MCP and OpenAI function-calling.",
     add_completion=False,
 )
-console = Console()
+console = Console(highlight=False)
 
 
 async def _with_servers(question: str, show_trace: bool) -> None:
@@ -41,7 +41,7 @@ async def _with_servers(question: str, show_trace: bool) -> None:
                 str(log.step),
                 log.server,
                 log.tool,
-                "✓" if log.ok else "✗",
+                "OK" if log.ok else "FAIL",
                 f"{log.duration_ms:.0f}",
             )
         console.print(table)
@@ -81,3 +81,7 @@ async def _chat_loop() -> None:
 def chat() -> None:
     """Start an interactive REPL session."""
     asyncio.run(_chat_loop())
+
+
+if __name__ == "__main__":
+    app()
