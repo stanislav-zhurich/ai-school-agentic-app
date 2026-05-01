@@ -12,7 +12,7 @@ from mcp.types import CallToolResult, Tool
 from .config import MCPServerSpec
 
 
-class MCPServer:
+class MCPClient:
     """Manages the lifecycle of a single stdio MCP server subprocess."""
 
     def __init__(self, spec: MCPServerSpec) -> None:
@@ -38,7 +38,7 @@ class MCPServer:
         await self._exit_stack.aclose()
         self._session = None
 
-    async def __aenter__(self) -> "MCPServer":
+    async def __aenter__(self) -> "MCPClient":
         await self.start()
         return self
 
@@ -47,7 +47,7 @@ class MCPServer:
 
     def _require_session(self) -> ClientSession:
         if self._session is None:
-            raise RuntimeError(f"MCPServer '{self.name}' is not started.")
+            raise RuntimeError(f"MCPClient '{self.name}' is not started.")
         return self._session
 
     async def list_tools(self) -> list[Tool]:
@@ -60,8 +60,8 @@ class MCPServer:
         return await session.call_tool(tool_name, arguments)
 
 
-async def start_all(specs: list[MCPServerSpec]) -> tuple[MCPServer, ...]:
-    """Start multiple MCP servers concurrently and return them."""
-    servers = [MCPServer(spec) for spec in specs]
-    await asyncio.gather(*(s.start() for s in servers))
-    return tuple(servers)
+async def start_all(specs: list[MCPServerSpec]) -> tuple[MCPClient, ...]:
+    """Start multiple MCP server subprocesses concurrently and return their clients."""
+    clients = [MCPClient(spec) for spec in specs]
+    await asyncio.gather(*(c.start() for c in clients))
+    return tuple(clients)

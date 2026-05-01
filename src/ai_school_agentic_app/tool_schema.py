@@ -5,10 +5,10 @@ from typing import Any
 
 from mcp.types import Tool
 
-from .mcp_client import MCPServer
+from .mcp_client import MCPClient
 
-# Maps namespaced_tool_name -> (MCPServer, original_tool_name)
-ToolRegistry = dict[str, tuple[MCPServer, str]]
+# Maps namespaced_tool_name -> (MCPClient, original_tool_name)
+ToolRegistry = dict[str, tuple[MCPClient, str]]
 
 
 def _namespace(server_name: str, tool_name: str) -> str:
@@ -36,7 +36,7 @@ def _mcp_tool_to_openai(namespaced_name: str, tool: Tool) -> dict[str, Any]:
     }
 
 
-async def build_tool_registry(servers: list[MCPServer]) -> tuple[list[dict[str, Any]], ToolRegistry]:
+async def build_tool_registry(servers: list[MCPClient]) -> tuple[list[dict[str, Any]], ToolRegistry]:
     """
     Fetch tools from all servers, namespace them, and return:
       - openai_tools: list ready to pass as `tools=` to the LLM

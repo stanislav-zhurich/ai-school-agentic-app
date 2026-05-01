@@ -10,7 +10,7 @@ from rich.table import Table
 
 from .agent import run_agent
 from .config import NEWS_SPEC, WEATHER_SPEC
-from .mcp_client import MCPServer
+from .mcp_client import MCPClient
 
 app = typer.Typer(
     name="ai-school-agent",
@@ -22,8 +22,8 @@ console = Console(highlight=False)
 
 async def _with_servers(question: str, show_trace: bool) -> None:
     async with AsyncExitStack() as stack:
-        weather = await stack.enter_async_context(MCPServer(WEATHER_SPEC))
-        news = await stack.enter_async_context(MCPServer(NEWS_SPEC))
+        weather = await stack.enter_async_context(MCPClient(WEATHER_SPEC))
+        news = await stack.enter_async_context(MCPClient(NEWS_SPEC))
 
         with console.status("[bold green]Thinking…"):
             result = await run_agent(question, [weather, news])
@@ -58,8 +58,8 @@ def ask(
 
 async def _chat_loop() -> None:
     async with AsyncExitStack() as stack:
-        weather = await stack.enter_async_context(MCPServer(WEATHER_SPEC))
-        news = await stack.enter_async_context(MCPServer(NEWS_SPEC))
+        weather = await stack.enter_async_context(MCPClient(WEATHER_SPEC))
+        news = await stack.enter_async_context(MCPClient(NEWS_SPEC))
         console.print("[bold green]Chat started. Type 'exit' or 'quit' to stop.[/]")
 
         while True:

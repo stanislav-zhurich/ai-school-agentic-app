@@ -9,7 +9,7 @@ from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 from .config import get_azure_api_version, get_azure_endpoint, get_llm_model, get_openai_api_key
-from .mcp_client import MCPServer
+from .mcp_client import MCPClient
 from .prompts import system_message
 from .tool_schema import ToolRegistry, build_tool_registry
 
@@ -58,7 +58,7 @@ def _tool_result_text(content: Any) -> str:
 
 async def run_agent(
     question: str,
-    servers: list[MCPServer],
+    servers: list[MCPClient],
     *,
     max_steps: int = MAX_STEPS,
 ) -> AgentResult:
@@ -128,7 +128,7 @@ async def run_agent(
     return AgentResult(answer=answer, trace=trace)
 
 
-def _resolve(ns_name: str, registry: ToolRegistry) -> tuple[MCPServer, str]:
+def _resolve(ns_name: str, registry: ToolRegistry) -> tuple[MCPClient, str]:
     if ns_name in registry:
         return registry[ns_name]
     raise KeyError(f"Tool {ns_name!r} not found in registry. Available: {list(registry)}")

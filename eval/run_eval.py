@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from ai_school_agentic_app.agent import run_agent  # noqa: E402
 from ai_school_agentic_app.config import NEWS_SPEC, WEATHER_SPEC  # noqa: E402
-from ai_school_agentic_app.mcp_client import MCPServer  # noqa: E402
+from ai_school_agentic_app.mcp_client import MCPClient  # noqa: E402
 
 DATASET_PATH = Path(__file__).parent / "dataset.jsonl"
 RESULTS_DIR = Path(__file__).parent / "results"
@@ -78,8 +78,8 @@ async def _run_all(rows: list[dict[str, Any]], limit: int | None) -> list[dict[s
     results: list[dict[str, Any]] = []
 
     async with AsyncExitStack() as stack:
-        weather = await stack.enter_async_context(MCPServer(WEATHER_SPEC))
-        news = await stack.enter_async_context(MCPServer(NEWS_SPEC))
+        weather = await stack.enter_async_context(MCPClient(WEATHER_SPEC))
+        news = await stack.enter_async_context(MCPClient(NEWS_SPEC))
 
         for row in rows:
             row_id = row["id"]
