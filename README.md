@@ -98,15 +98,8 @@ ai-school-agentic-app/
 |------|---------|
 | [Python 3.11+](https://www.python.org/) | Runtime |
 | [uv](https://docs.astral.sh/uv/) | Package manager & script runner |
-| [Node.js 18+](https://nodejs.org/) | Required only for the MCP Inspector UI |
+| [Node.js 18+](https://nodejs.org/) | Optional. Required only for the MCP Inspector UI |
 | Azure OpenAI API key | LLM backend |
-
-Install `uv` if you don't have it:
-
-```powershell
-# Windows (PowerShell)
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
 
 ---
 
@@ -114,14 +107,12 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 
 ```powershell
 # 1. Clone the repository
-git clone <repo-url>
+git clone https://github.com/stanislav-zhurich/ai-school-agentic-app.git
 cd ai-school-agentic-app
 
 # 2. Create virtual environment and install all dependencies
 uv sync
 ```
-
-That's it. `uv sync` reads `pyproject.toml`, creates `.venv/`, and installs the package in editable mode along with all dependencies.
 
 ---
 
@@ -180,31 +171,6 @@ What are the latest news headlines?
 Search news about artificial intelligence.
 What's the weather in Berlin and any news from Germany?
 ```
-
-> **Windows terminal tip:** prefix commands with `$env:PYTHONUTF8="1";` to avoid encoding issues with special characters in output.
-
----
-
-## Debugging in Cursor / VS Code
-
-Three debug configurations are provided in `.vscode/launch.json`:
-
-| Configuration | What it runs |
-|---------------|-------------|
-| `ask: What is the weather in London?` | One-shot weather question with `--trace` |
-| `ask: Latest news` | One-shot news question with `--trace` |
-| `chat REPL` | Interactive chat session |
-
-**To start debugging:**
-
-1. Open the **Run & Debug** panel (`Ctrl+Shift+D`)
-2. Select a configuration from the dropdown
-3. Press **F5**
-
-Output (including the tool trace table) appears in the **integrated terminal** panel.
-
-You can set breakpoints anywhere in `agent.py`, `mcp_client.py`, or the MCP server scripts.
-
 ---
 
 ## MCP Inspector (Visual Tool Tester)
@@ -251,26 +217,12 @@ Then open the URL printed in the terminal (usually `http://localhost:6274`).
 
 ---
 
-## Running Tests
-
-```powershell
-uv run pytest
-```
-
-Run with verbose output:
-
-```powershell
-uv run pytest -v
-```
-
----
-
 ## Running the Evaluation Suite
 
 The evaluation suite measures tool-routing accuracy and answer quality across a labelled dataset.
 
 ```powershell
-uv run ai-school-eval
+uv run eval/run_eval.py
 ```
 
 Options:
@@ -288,15 +240,16 @@ uv run ai-school-eval --output eval/results/my_run.json
 
 The runner prints a summary table with per-question routing, safety, and must-mention scores, then writes a full JSON report to `eval/results/`.
 
+### Evaluation metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| **Routing accuracy** | Quantitative | Fraction of questions where the agent called exactly the correct MCP server(s). A combined weather+news question scores 1.0 only if both servers were used. |
+| **Safety pass rate** | Quantitative | Fraction of adversarial questions where the answer contains none of the forbidden phrases (jailbreak / prompt-injection resistance). |
+| **Must-mention pass** | Quantitative | Fraction of questions where the answer contains all expected entities (e.g. the city name). Catches cases where the agent fetches data but forgets to use it. |
+| **Groundedness** | Qualitative (1–3) | Manual or LLM-as-judge score: does the answer cite specific facts from the tool output (3) or hallucinate / ignore tool results (1)? See `eval/rubric.md`. |
+
+The dataset (`eval/dataset.jsonl`) contains 16 labelled questions: 6 weather-only, 4 news-only, 4 combined, and 2 adversarial safety cases.
+
 ---
 
-## Key Design Decisions
-
-**Sync vs async tool functions in MCP servers**
-The MCP server scripts (`weather_mcp_server.py`, `newsdata_mcp_server.py`) use synchronous `httpx` calls inside `@mcp.tool()` functions. This is intentional: each MCP server runs in its own subprocess driven by `FastMCP`, which manages its own event loop. Using sync HTTP keeps the server code simple and avoids nested event-loop issues. The agent side (`mcp_client.py`, `agent.py`) is fully async.
-
-**Tool namespacing**
-Tool names are prefixed with the server name (`weather__get_current_weather`, `news__search_news`) to avoid collisions when both servers expose similarly-named functions.
-
-**No external API keys for data**
-Both data sources are free and keyless: Open-Meteo for weather, Google News RSS for news.

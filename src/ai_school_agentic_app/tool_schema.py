@@ -36,7 +36,7 @@ def _mcp_tool_to_openai(namespaced_name: str, tool: Tool) -> dict[str, Any]:
     }
 
 
-async def build_tool_registry(servers: list[MCPClient]) -> tuple[list[dict[str, Any]], ToolRegistry]:
+async def build_tool_registry(mcp_clients: list[MCPClient]) -> tuple[list[dict[str, Any]], ToolRegistry]:
     """
     Fetch tools from all servers, namespace them, and return:
       - openai_tools: list ready to pass as `tools=` to the LLM
@@ -45,7 +45,7 @@ async def build_tool_registry(servers: list[MCPClient]) -> tuple[list[dict[str, 
     openai_tools: list[dict[str, Any]] = []
     registry: ToolRegistry = {}
 
-    for server in servers:
+    for server in mcp_clients:
         tools = await server.list_tools()
         for tool in tools:
             ns_name = _namespace(server.name, tool.name)
